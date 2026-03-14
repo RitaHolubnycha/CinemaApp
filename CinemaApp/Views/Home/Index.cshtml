@@ -1,0 +1,15 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<h2>Welcome to CinemaApp</h2>
+<p>Choose what you want to manage:</p>
+
+<div>
+    <a class="btn btn-primary" asp-controller="Actors" asp-action="Index" style="margin-right:10px;">
+        Actors
+    </a>
+    <a class="btn btn-primary" asp-controller="Films" asp-action="Index">
+        Films
+    </a>
+</div>

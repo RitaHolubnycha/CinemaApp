@@ -1,0 +1,48 @@
+﻿@model CinemaApp.Models.Actor
+
+<h1>Actor Details</h1>
+
+<hr />
+<dl class="row">
+    <dt class="col-sm-2">First Name</dt>
+    <dd class="col-sm-10">@Model.FirstName</dd>
+
+    <dt class="col-sm-2">Last Name</dt>
+    <dd class="col-sm-10">@Model.LastName</dd>
+
+    <dt class="col-sm-2">Birth Date</dt>
+    <dd class="col-sm-10">@Model.BirthDate?.ToShortDateString()</dd>
+
+    <dt class="col-sm-2">Nationality</dt>
+    <dd class="col-sm-10">@Model.Nationality</dd>
+
+    <dt class="col-sm-2">Biography</dt>
+    <dd class="col-sm-10">@Model.Biography</dd>
+
+    <dt class="col-sm-2">Films</dt>
+    <dd class="col-sm-10">
+        @if (Model.FilmActors != null && Model.FilmActors.Any())
+        {
+            <ul>
+                @foreach (var fa in Model.FilmActors)
+                {
+                    <li>@fa.Film.Title</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <span>No films</span>
+        }
+    </dd>
+    <a asp-controller="FilmActors"
+       asp-action="Create"
+       asp-route-actorId="@Model.ActorId"
+       asp-route-returnUrl="@Context.Request.Path"
+       class="btn btn-success">
+        Add Film
+    </a>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.ActorId" class="btn btn-primary">Edit</a>
+<a asp-action="Index" class="btn btn-secondary">Back to List</a>

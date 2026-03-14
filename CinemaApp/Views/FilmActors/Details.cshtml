@@ -1,0 +1,29 @@
+﻿@model CinemaApp.Models.FilmActor
+
+<h1>Details</h1>
+
+<div>
+    <h4>Film Actor</h4>
+    <hr />
+
+    <dl class="row">
+        <dt class="col-sm-2">
+            Film
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Film.Title
+        </dd>
+
+        <dt class="col-sm-2">
+            Actor
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Actor.FirstName @Model.Actor.LastName
+        </dd>
+    </dl>
+</div>
+
+<a asp-action="Edit"
+   asp-route-filmId="@Model.FilmId"
+   asp-route-actorId="@Model.ActorId">Edit</a> |
+<a asp-action="Index">Back to List</a>
