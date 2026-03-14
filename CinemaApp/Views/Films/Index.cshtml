@@ -1,0 +1,36 @@
+﻿@model IEnumerable<CinemaApp.Models.Film>
+
+<h1>Films</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Release Date</th>
+            <th>Genre</th>
+            <th>Description</th>
+            <th>Actors</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var film in Model)
+        {
+            <tr>
+                <td>@film.Title</td>
+                <td>@(film.ReleaseDate?.ToShortDateString())</td>
+                <td>@film.Genre</td>
+                <td>@film.Description</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@film.FilmId">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@film.FilmId">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@film.FilmId">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

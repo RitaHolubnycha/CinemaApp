@@ -1,0 +1,39 @@
+﻿@model IEnumerable<CinemaApp.Models.FilmActor>
+
+<h1>Film Actors</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Film</th>
+            <th>Actor</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Film.Title</td>
+                <td>@item.Actor.FirstName @item.Actor.LastName</td>
+                <td>
+                    <a asp-action="Details"
+                       asp-route-filmId="@item.FilmId"
+                       asp-route-actorId="@item.ActorId">Details</a> |
+
+                    <a asp-action="Edit"
+                       asp-route-filmId="@item.FilmId"
+                       asp-route-actorId="@item.ActorId">Edit</a> |
+
+                    <a asp-action="Delete"
+                       asp-route-filmId="@item.FilmId"
+                       asp-route-actorId="@item.ActorId">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
