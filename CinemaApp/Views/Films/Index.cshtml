@@ -26,6 +26,21 @@
                 <td>@film.Genre</td>
                 <td>@film.Description</td>
                 <td>
+                    @if (film.FilmActors != null && film.FilmActors.Any())
+                    {
+                        <ul>
+                            @foreach (var fa in film.FilmActors)
+                            {
+                                <li>@fa.Actor.FirstName @fa.Actor.LastName</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span>No actors assigned</span>
+                    }
+                </td>
+                <td>
                     <a asp-action="Edit" asp-route-id="@film.FilmId">Edit</a> |
                     <a asp-action="Details" asp-route-id="@film.FilmId">Details</a> |
                     <a asp-action="Delete" asp-route-id="@film.FilmId">Delete</a>

@@ -25,7 +25,25 @@
                 <ul>
                     @foreach (var fa in Model.FilmActors)
                     {
-                        <li>@fa.Actor.FirstName @fa.Actor.LastName</li>
+                        <li>
+                            @fa.Actor.FirstName @fa.Actor.LastName
+
+                            <form asp-controller="FilmActors"
+                                  asp-action="Delete"
+                                  method="post"
+                                  style="display:inline">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden" name="filmId" value="@fa.FilmId" />
+                                <input type="hidden" name="actorId" value="@fa.ActorId" />
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    Remove
+                                </button>
+                            </form>
+                        </li>
                     }
                 </ul>
             }

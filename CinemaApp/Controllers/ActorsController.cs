@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CinemaApp.Data;
 using CinemaApp.Models;
+using CinemaApp.Helpers;
 
 namespace CinemaApp.Controllers
 {
@@ -51,18 +52,48 @@ namespace CinemaApp.Controllers
             return View();
         }
 
-        // POST: Actors/Create
+        // POST: Actors/Create (запис у сесію)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,BirthDate,Nationality,Biography")] Actor actor)
+        public IActionResult Create([Bind("FirstName,LastName,BirthDate,Nationality,Biography")] Actor actor)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(actor);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                HttpContext.Session.SetObject("NewActor", actor);
+                return RedirectToAction(nameof(ConfirmCreate));
             }
+
             return View(actor);
+        }
+
+        // GET: Actors/ConfirmCreate
+        public IActionResult ConfirmCreate()
+        {
+            var actor = HttpContext.Session.GetObject<Actor>("NewActor");
+
+            if (actor == null)
+                return RedirectToAction(nameof(Create));
+
+            return View(actor);
+        }
+
+        // POST: Actors/ConfirmCreate
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("ConfirmCreate")]
+        public async Task<IActionResult> ConfirmCreatePost()
+        {
+            var actor = HttpContext.Session.GetObject<Actor>("NewActor");
+
+            if (actor != null)
+            {
+                _context.Actors.Add(actor);
+                await _context.SaveChangesAsync();
+
+                HttpContext.Session.Remove("NewActor");
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Actors/Edit/5
@@ -72,39 +103,69 @@ namespace CinemaApp.Controllers
                 return NotFound();
 
             var actor = await _context.Actors.FindAsync(id);
+
             if (actor == null)
                 return NotFound();
 
             return View(actor);
         }
 
-        // POST: Actors/Edit/5
+        // POST: Actors/Edit (запис у сесію)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ActorId,FirstName,LastName,BirthDate,Nationality,Biography")] Actor actor)
+        public IActionResult Edit(int id, [Bind("ActorId,FirstName,LastName,BirthDate,Nationality,Biography")] Actor actor)
         {
             if (id != actor.ActorId)
                 return NotFound();
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(actor);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Actors.Any(e => e.ActorId == actor.ActorId))
-                        return NotFound();
-                    else
-                        throw;
-                }
-                return RedirectToAction(nameof(Index));
+                HttpContext.Session.SetObject("EditActor", actor);
+                return RedirectToAction(nameof(ConfirmEdit));
             }
+
             return View(actor);
         }
 
+        // GET: Actors/ConfirmEdit
+        public IActionResult ConfirmEdit()
+        {
+            var actor = HttpContext.Session.GetObject<Actor>("EditActor");
+
+            if (actor == null)
+                return RedirectToAction(nameof(Index));
+
+            return View(actor);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("ConfirmEdit")]
+        public async Task<IActionResult> ConfirmEditPost()
+        {
+            var actor = HttpContext.Session.GetObject<Actor>("EditActor");
+
+            if (actor != null)
+            {
+                var existingActor = await _context.Actors.FindAsync(actor.ActorId);
+
+                if (existingActor == null)
+                    return NotFound();
+
+                // оновлюємо вручну
+                existingActor.FirstName = actor.FirstName;
+                existingActor.LastName = actor.LastName;
+                existingActor.BirthDate = actor.BirthDate;
+                existingActor.Nationality = actor.Nationality;
+                existingActor.Biography = actor.Biography;
+
+                await _context.SaveChangesAsync();
+
+                HttpContext.Session.Remove("EditActor");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
         // GET: Actors/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -126,11 +187,13 @@ namespace CinemaApp.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var actor = await _context.Actors.FindAsync(id);
+
             if (actor != null)
             {
                 _context.Actors.Remove(actor);
                 await _context.SaveChangesAsync();
             }
+
             return RedirectToAction(nameof(Index));
         }
     }

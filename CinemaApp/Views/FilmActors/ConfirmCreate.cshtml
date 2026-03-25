@@ -1,0 +1,13 @@
+﻿@model CinemaApp.Models.FilmActor
+
+<h1>Confirm Link</h1>
+
+<hr />
+
+<p><strong>Film:</strong> @ViewBag.Film?.Title</p>
+<p><strong>Actor:</strong> @ViewBag.Actor?.LastName</p>
+
+<form asp-action="ConfirmCreate">
+    <button type="submit" class="btn btn-success">Confirm</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

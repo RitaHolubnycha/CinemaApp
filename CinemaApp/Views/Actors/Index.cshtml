@@ -26,7 +26,23 @@
                 <td>@actor.LastName</td>
                 <td>@actor.BirthDate?.ToShortDateString()</td>
                 <td>@actor.Nationality</td>
-           
+
+                <td>
+                    @if (actor.FilmActors != null && actor.FilmActors.Any())
+                    {
+                        <ul>
+                            @foreach (var fa in actor.FilmActors)
+                            {
+                                <li>@fa.Film.Title</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span>No films</span>
+                    }
+                </td>
+
                 <td>
                     <a asp-action="Edit" asp-route-id="@actor.ActorId">Edit</a> |
                     <a asp-action="Details" asp-route-id="@actor.ActorId">Details</a> |

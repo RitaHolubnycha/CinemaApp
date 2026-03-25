@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CinemaApp.Data;
 using CinemaApp.Models;
+using CinemaApp.Helpers;
 
 namespace CinemaApp.Controllers
 {
@@ -56,26 +57,58 @@ namespace CinemaApp.Controllers
             return View();
         }
 
-        // POST: FilmActors/Create
+        // 🔥 POST: FilmActors/Create → ТЕПЕР ЧЕРЕЗ SESSION
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilmActor filmActor, string returnUrl)
+        public IActionResult Create(FilmActor filmActor, string returnUrl)
         {
-            if (!_context.FilmActors.Any(fa =>
-                fa.FilmId == filmActor.FilmId &&
-                fa.ActorId == filmActor.ActorId))
+            HttpContext.Session.SetObject("NewFilmActor", filmActor);
+            HttpContext.Session.SetString("ReturnUrl", returnUrl ?? "");
+
+            return RedirectToAction(nameof(ConfirmCreate));
+        }
+
+        // ✅ GET: ConfirmCreate
+        public IActionResult ConfirmCreate()
+        {
+            var filmActor = HttpContext.Session.GetObject<FilmActor>("NewFilmActor");
+
+            if (filmActor == null)
+                return RedirectToAction(nameof(Index));
+
+            ViewBag.Film = _context.Films.Find(filmActor.FilmId);
+            ViewBag.Actor = _context.Actors.Find(filmActor.ActorId);
+
+            return View(filmActor);
+        }
+
+        // ✅ POST: ConfirmCreate
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("ConfirmCreate")]
+        public async Task<IActionResult> ConfirmCreatePost()
+        {
+            var filmActor = HttpContext.Session.GetObject<FilmActor>("NewFilmActor");
+
+            if (filmActor != null)
             {
-                _context.FilmActors.Add(filmActor);
-                await _context.SaveChangesAsync();
+                if (!_context.FilmActors.Any(fa =>
+                    fa.FilmId == filmActor.FilmId &&
+                    fa.ActorId == filmActor.ActorId))
+                {
+                    _context.FilmActors.Add(filmActor);
+                    await _context.SaveChangesAsync();
+                }
+
+                HttpContext.Session.Remove("NewFilmActor");
             }
+
+            var returnUrl = HttpContext.Session.GetString("ReturnUrl");
 
             if (!string.IsNullOrEmpty(returnUrl))
                 return Redirect(returnUrl);
 
             return RedirectToAction(nameof(Index));
-            ViewData["ActorId"] = new SelectList(_context.Actors, "ActorId", "LastName", filmActor.ActorId);
-            ViewData["FilmId"] = new SelectList(_context.Films, "FilmId", "Title", filmActor.FilmId);
-            return View(filmActor);
         }
 
         // GET: FilmActors/Delete
@@ -96,18 +129,61 @@ namespace CinemaApp.Controllers
         }
 
         // POST: FilmActors/Delete
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int filmId, int actorId)
+        [ActionName("Delete")]
+        public IActionResult Delete(int filmId, int actorId, string returnUrl)
         {
-            var filmActor = await _context.FilmActors
-                .FirstOrDefaultAsync(m => m.FilmId == filmId && m.ActorId == actorId);
+            var filmActor = new FilmActor
+            {
+                FilmId = filmId,
+                ActorId = actorId
+            };
+
+            HttpContext.Session.SetObject("DeleteFilmActor", filmActor);
+            HttpContext.Session.SetString("ReturnUrl", returnUrl ?? "");
+
+            return RedirectToAction(nameof(ConfirmDelete));
+        }
+        public IActionResult ConfirmDelete()
+        {
+            var filmActor = HttpContext.Session.GetObject<FilmActor>("DeleteFilmActor");
+
+            if (filmActor == null)
+                return RedirectToAction(nameof(Index));
+
+            ViewBag.Film = _context.Films.Find(filmActor.FilmId);
+            ViewBag.Actor = _context.Actors.Find(filmActor.ActorId);
+
+            return View(filmActor);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("ConfirmDelete")]
+        public async Task<IActionResult> ConfirmDeletePost()
+        {
+            var filmActor = HttpContext.Session.GetObject<FilmActor>("DeleteFilmActor");
 
             if (filmActor != null)
             {
-                _context.FilmActors.Remove(filmActor);
-                await _context.SaveChangesAsync();
+                var entity = await _context.FilmActors
+                    .FirstOrDefaultAsync(f =>
+                        f.FilmId == filmActor.FilmId &&
+                        f.ActorId == filmActor.ActorId);
+
+                if (entity != null)
+                {
+                    _context.FilmActors.Remove(entity);
+                    await _context.SaveChangesAsync();
+                }
+
+                HttpContext.Session.Remove("DeleteFilmActor");
             }
+
+            var returnUrl = HttpContext.Session.GetString("ReturnUrl");
+
+            if (!string.IsNullOrEmpty(returnUrl))
+                return Redirect(returnUrl);
 
             return RedirectToAction(nameof(Index));
         }

@@ -2,6 +2,7 @@
 using CinemaApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CinemaApp.Helpers;
 
 namespace CinemaApp.Controllers
 {
@@ -18,9 +19,10 @@ namespace CinemaApp.Controllers
         public async Task<IActionResult> Index()
         {
             var films = await _context.Films
-                                .Include(f => f.FilmActors)
-                                    .ThenInclude(fa => fa.Actor)
-                                .ToListAsync();
+                .Include(f => f.FilmActors)
+                .ThenInclude(fa => fa.Actor)
+                .ToListAsync();
+
             return View(films);
         }
 
@@ -31,7 +33,7 @@ namespace CinemaApp.Controllers
 
             var film = await _context.Films
                 .Include(f => f.FilmActors)
-                    .ThenInclude(fa => fa.Actor)
+                .ThenInclude(fa => fa.Actor)
                 .FirstOrDefaultAsync(f => f.FilmId == id);
 
             if (film == null) return NotFound();
@@ -48,15 +50,44 @@ namespace CinemaApp.Controllers
         // POST: Films/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,ReleaseDate,Genre,Description")] Film film)
+        public IActionResult Create([Bind("Title,ReleaseDate,Genre,Description")] Film film)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(film);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                HttpContext.Session.SetObject("NewFilm", film);
+                return RedirectToAction("ConfirmCreate");
             }
+
             return View(film);
+        }
+
+        // GET: Films/ConfirmCreate
+        public IActionResult ConfirmCreate()
+        {
+            var film = HttpContext.Session.GetObject<Film>("NewFilm");
+
+            if (film == null)
+                return RedirectToAction(nameof(Create));
+
+            return View(film);
+        }
+
+        // POST: Films/ConfirmCreate
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmCreatePost()
+        {
+            var film = HttpContext.Session.GetObject<Film>("NewFilm");
+
+            if (film != null)
+            {
+                _context.Films.Add(film);
+                await _context.SaveChangesAsync();
+
+                HttpContext.Session.Remove("NewFilm");
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Films/Edit/5
@@ -73,25 +104,56 @@ namespace CinemaApp.Controllers
         // POST: Films/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("FilmId,Title,ReleaseDate,Genre,Description")] Film film)
+        public IActionResult Edit(int id, [Bind("FilmId,Title,ReleaseDate,Genre,Description")] Film film)
         {
             if (id != film.FilmId) return NotFound();
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(film);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!FilmExists(film.FilmId)) return NotFound();
-                    else throw;
-                }
-                return RedirectToAction(nameof(Index));
+                HttpContext.Session.SetObject("EditFilm", film);
+                return RedirectToAction("ConfirmEdit");
             }
+
             return View(film);
+        }
+
+        // GET: Films/ConfirmEdit
+        public IActionResult ConfirmEdit()
+        {
+            var film = HttpContext.Session.GetObject<Film>("EditFilm");
+
+            if (film == null)
+                return RedirectToAction(nameof(Index));
+
+            return View(film);
+        }
+
+        // POST: Films/ConfirmEdit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("ConfirmEditPost")]
+        public async Task<IActionResult> ConfirmEditPost()
+        {
+            var film = HttpContext.Session.GetObject<Film>("EditFilm");
+
+            if (film != null)
+            {
+                var existingFilm = await _context.Films.FindAsync(film.FilmId);
+
+                if (existingFilm == null)
+                    return NotFound();
+
+                existingFilm.Title = film.Title;
+                existingFilm.ReleaseDate = film.ReleaseDate;
+                existingFilm.Genre = film.Genre;
+                existingFilm.Description = film.Description;
+
+                await _context.SaveChangesAsync();
+
+                HttpContext.Session.Remove("EditFilm");
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Films/Delete/5
@@ -120,12 +182,11 @@ namespace CinemaApp.Controllers
 
             if (film != null)
             {
-                // видаляємо усі зв’язки перед видаленням
                 _context.FilmActors.RemoveRange(film.FilmActors);
                 _context.Films.Remove(film);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,4 +1,4 @@
-﻿@model CinemaApp.Models.Actor
+﻿@@model CinemaApp.Models.Actor
 
 <h1>Actor Details</h1>
 
@@ -21,12 +21,30 @@
 
     <dt class="col-sm-2">Films</dt>
     <dd class="col-sm-10">
-        @if (Model.FilmActors != null && Model.FilmActors.Any())
+        @if (Model.FilmActors != null && Model.FilmActors.Count > 0)
         {
             <ul>
                 @foreach (var fa in Model.FilmActors)
                 {
-                    <li>@fa.Film.Title</li>
+                    <li>
+                        @fa.Film.Title
+
+                        <form asp-controller="FilmActors"
+                              asp-action="Delete"
+                              method="post"
+                              style="display:inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="filmId" value="@fa.FilmId" />
+                            <input type="hidden" name="actorId" value="@fa.ActorId" />
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                Remove
+                            </button>
+                        </form>
+                    </li>
                 }
             </ul>
         }
@@ -35,14 +53,18 @@
             <span>No films</span>
         }
     </dd>
-    <a asp-controller="FilmActors"
-       asp-action="Create"
-       asp-route-actorId="@Model.ActorId"
-       asp-route-returnUrl="@Context.Request.Path"
-       class="btn btn-success">
-        Add Film
-    </a>
 </dl>
+
+<a asp-controller="FilmActors"
+   asp-action="Create"
+   asp-route-actorId="@Model.ActorId"
+   asp-route-returnUrl="@Context.Request.Path"
+   class="btn btn-success">
+    Add Film
+</a>
+
+<br />
+<br />
 
 <a asp-action="Edit" asp-route-id="@Model.ActorId" class="btn btn-primary">Edit</a>
 <a asp-action="Index" class="btn btn-secondary">Back to List</a>

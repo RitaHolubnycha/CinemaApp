@@ -2,8 +2,11 @@
 
 <h1>Create</h1>
 
-<form asp-action="Create">
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
     <div class="form-group">
         <label>Film</label>
         <select asp-for="FilmId"
@@ -20,6 +23,6 @@
 
     <br />
 
-    <input type="submit" value="Create" class="btn btn-primary" />
+    <input type="submit" value="Next" class="btn btn-primary" />
     <a asp-action="Index">Back to List</a>
 </form>
